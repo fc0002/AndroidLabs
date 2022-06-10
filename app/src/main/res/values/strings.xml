@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">To Do</string>
+    <string name="app_name">CST2335 Lab 4</string>
     <string name="switch1">Urgent</string>
     <string name="button">ADD</string>
     <string name="type_here">Type Here</string>
