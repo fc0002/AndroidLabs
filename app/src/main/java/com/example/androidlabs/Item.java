@@ -1,3 +1,5 @@
+package com.example.androidlabs;
+
 public class Item {
 
     String text;
@@ -8,5 +10,8 @@ public class Item {
         this.urgent = urgent;
     }
 
+    public String getText() {
+        return text;
+    }
 }
 
