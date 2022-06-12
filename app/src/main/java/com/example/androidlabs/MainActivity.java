@@ -106,9 +106,6 @@ public class MainActivity extends AppCompatActivity {
 
             myAdapter.notifyDataSetChanged();
 
-            //Show the id of the inserted item:
-            Toast.makeText(this, "Inserted item id:" + newId, Toast.LENGTH_LONG).show();
-
         });
 
     }
