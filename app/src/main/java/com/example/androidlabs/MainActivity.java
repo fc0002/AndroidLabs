@@ -77,8 +77,8 @@ public class MainActivity extends AppCompatActivity {
 
             String item = editText.getText().toString();
             boolean switchOption = theSwitch.isChecked();
-            int urgency = 0;
-            if (switchOption = true) {
+            int urgency;
+            if (switchOption == true) {
                 urgency = 1;
             } else {
                 urgency = 0;
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
     private void printCursor(Cursor c) {
         Log.d(TAG, "Database version " + db.getVersion());
         Log.d(TAG, "Number of columns " + c.getColumnNames().length);
-        Log.d(TAG,"Names of columns " + c.getColumnNames()[0] + " " + c.getColumnNames()[1]);
+        Log.d(TAG,"Names of columns " + c.getColumnNames()[0] + ", " + c.getColumnNames()[1] + ", " + c.getColumnNames()[2]);
         Log.d(TAG,"Number of results " + c.getCount());
 
         int itemColumnIndex = c.getColumnIndex(MyOpener.COL_ITEM);
