@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Layout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "ToDoList";
     private ArrayList<Item> itemsList = new ArrayList<Item>();
     private MyListAdapter myAdapter;
     private EditText editText;
@@ -75,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
             String item = editText.getText().toString();
             boolean switchOption = theSwitch.isChecked();
-            int urgency;
+            int urgency = 0;
             if (switchOption = true) {
                 urgency = 1;
             } else {
@@ -86,25 +88,23 @@ public class MainActivity extends AppCompatActivity {
             ContentValues newRowValues = new ContentValues();
 
             //Now provide a value for every database column defined in MyOpener.java:
-            //put string name in the NAME column:
             newRowValues.put(MyOpener.COL_ITEM, item);
-            //put string email in the EMAIL column:
             newRowValues.put(MyOpener.COL_URGENCY, urgency);
 
             //Now insert in the database:
             long newId = db.insert(MyOpener.TABLE_NAME, null, newRowValues);
 
-            //now you have the newId, you can create the Contact object
             Item newItem = new Item(item, urgency, newId);
 
             //add the new contact to the list:
             itemsList.add(newItem);
-            //update the listView:
-            myAdapter.notifyDataSetChanged();
 
             //clear the EditText fields:
             editText.setText("");
             theSwitch.setChecked(false);
+            urgency = 0;
+
+            myAdapter.notifyDataSetChanged();
 
             //Show the id of the inserted item:
             Toast.makeText(this, "Inserted item id:" + newId, Toast.LENGTH_LONG).show();
@@ -115,9 +115,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadDataFromDatabase() {
         //get a database connection:
-        MyOpener dbOpener = new MyOpener(this);
-        db = dbOpener.getWritableDatabase();
+        MyOpener dbOpener = new MyOpener(MainActivity.this);
 
+        db = dbOpener.getWritableDatabase();
 
         // We want to get all of the columns. Look at MyOpener.java for the definitions:
         String[] columns = {MyOpener.COL_ID, MyOpener.COL_ITEM, MyOpener.COL_URGENCY};
@@ -138,21 +138,31 @@ public class MainActivity extends AppCompatActivity {
 
             itemsList.add(new Item(item, urgency, id));
         }
-    }
-
-
-    protected void updateContact(Item i) {
-        //Create a ContentValues object to represent a database row:
-        ContentValues updatedValues = new ContentValues();
-        updatedValues.put(MyOpener.COL_ITEM, i.getText());
-        updatedValues.put(MyOpener.COL_URGENCY, i.isUrgent());
-
-        //now call the update function:
-        db.update(MyOpener.TABLE_NAME, updatedValues, MyOpener.COL_ID + "= ?", new String[]{Long.toString(i.getId())});
+        printCursor(results);
     }
 
     protected void deleteItem(Item i) {
         db.delete(MyOpener.TABLE_NAME, MyOpener.COL_ID + "= ?", new String[]{Long.toString(i.getId())});
+    }
+
+    private void printCursor(Cursor c) {
+        Log.d(TAG, "Database version " + db.getVersion());
+        Log.d(TAG, "Number of columns " + c.getColumnNames().length);
+        Log.d(TAG,"Names of columns " + c.getColumnNames()[0] + " " + c.getColumnNames()[1]);
+        Log.d(TAG,"Number of results " + c.getCount());
+
+        int itemColumnIndex = c.getColumnIndex(MyOpener.COL_ITEM);
+        int urgencyColIndex = c.getColumnIndex(MyOpener.COL_URGENCY);
+        int idColIndex = c.getColumnIndex(MyOpener.COL_ID);
+
+        while (c.moveToNext()) {
+            String item = c.getString(itemColumnIndex);
+            int urgency = c.getInt(urgencyColIndex);
+            long id = c.getInt(idColIndex);
+
+            Log.d(TAG,"Result row " + id + " " + item + " " + urgency);
+        }
+
     }
 
     private class MyListAdapter extends BaseAdapter {
@@ -180,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
             Item item = (Item) getItem(position);
             textView.setText(item.getText());
 
-            if (item.isUrgent() == 1) {
+            if (item.urgent == 1) {
                 textView.setBackgroundColor(Color.BLACK);
                 textView.setTextColor(Color.WHITE);
             } else {
