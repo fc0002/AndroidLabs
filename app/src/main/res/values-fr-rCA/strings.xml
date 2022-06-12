@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources> <string name="app_name">CST2335 Lab 4</string>
+    <string name="switch1">urgente</string>
+    <string name="button">AJOUTER</string>
+    <string name="type_here">écrivez ici</string>
+</resources>
