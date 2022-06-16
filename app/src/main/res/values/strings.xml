@@ -1,6 +1,3 @@
 <resources>
-    <string name="app_name">CST2335 Lab 4</string>
-    <string name="switch1">Urgent</string>
-    <string name="button">ADD</string>
-    <string name="type_here">Type Here</string>
+    <string name="app_name">Lab_6</string>
 </resources>

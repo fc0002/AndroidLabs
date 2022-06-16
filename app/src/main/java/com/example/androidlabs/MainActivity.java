@@ -1,201 +1,99 @@
 package com.example.androidlabs;
 
-import androidx.appcompat.app.AlertDialog;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.ImageView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.ClipData;
-import android.content.ContentValues;
-import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
-import android.os.Bundle;
-import android.text.Layout;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
+import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
+    Bitmap bitmap;
 
-    private static final String TAG = "ToDoList";
-    private ArrayList<Item> itemsList = new ArrayList<Item>();
-    private MyListAdapter myAdapter;
-    private EditText editText;
-    SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Get the fields from the screen:
-        EditText editText = (EditText) findViewById(R.id.editText);
-        Switch theSwitch = (Switch) findViewById(R.id.switchOption);
-        Button addButton = (Button) findViewById(R.id.button);
-        ListView listViewItems = (ListView) findViewById(R.id.listviewItems);
+        ImageView imageView = (ImageView)findViewById(R.id.imageView);
+        CatImages req = new CatImages(imageView);
+        req.execute("https://cataas.com/cat?json=true");
 
-        listViewItems.setAdapter(myAdapter = new MyListAdapter());
+    }
 
-        loadDataFromDatabase();
+    private class CatImages extends AsyncTask<String, Integer, Bitmap> {
 
-        listViewItems.setOnItemLongClickListener((p, b, pos, id) -> {
-            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-            alertDialogBuilder.setTitle("Do you want to delete this?")
+        ImageView imageView;
 
-                    //What is the message
-                    .setMessage("The selected row is: " + pos)
+        public CatImages(ImageView imageView) {
+            this.imageView = imageView;
+        }
+        public Bitmap doInBackground(String... args) {
+            try {
 
-                    //What the YES button does
-                    .setPositiveButton("Delete item", (click, arg) -> {
-                        Item item = itemsList.get(pos);
-                        deleteItem(item);
-                        itemsList.remove(pos);
-                        myAdapter.notifyDataSetChanged();
-                    })
+                //create a URL object of what server to contact:
+                URL url = new URL(args[0]);
 
-                    //What the No button does
-                    .setNegativeButton("No", (click, arg) -> {
-                    })
+                //open the connection
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
 
-                    //Show the dialog
-                    .create().show();
-            return true;
-        });
+                //wait for data:
+                InputStream response = urlConnection.getInputStream();
 
-        addButton.setOnClickListener(click -> {
 
-            String item = editText.getText().toString();
-            boolean switchOption = theSwitch.isChecked();
-            int urgency;
-            if (switchOption == true) {
-                urgency = 1;
-            } else {
-                urgency = 0;
+                //JSON reading:
+                //Build the entire string response:
+                BufferedReader reader = new BufferedReader(new InputStreamReader(response, "UTF-8"), 8);
+                StringBuilder sb = new StringBuilder();
+
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line + "\n");
+                }
+                String result = sb.toString(); //result is the whole string
+
+
+                // convert string to JSON:
+                JSONObject jsonObject = new JSONObject(result);
+
+                int id = jsonObject.getInt("id");
+                String urlString = jsonObject.getString("url");
+                String realUrl = "https://cataas.com" + urlString;
+
+                InputStream in = new java.net.URL("https://cataas.com/cat/595f280e557291a9750ebfa3").openStream();
+                bitmap = BitmapFactory.decodeStream(in);
+                //imageView.setImageBitmap(bitmap);
+                Log.i("MainActivity", "The id is: " + id);
+
+            } catch (Exception e) {
+
             }
 
-            //add to the database and get the new ID
-            ContentValues newRowValues = new ContentValues();
+            return bitmap;
 
-            //Now provide a value for every database column defined in MyOpener.java:
-            newRowValues.put(MyOpener.COL_ITEM, item);
-            newRowValues.put(MyOpener.COL_URGENCY, urgency);
-
-            //Now insert in the database:
-            long newId = db.insert(MyOpener.TABLE_NAME, null, newRowValues);
-
-            Item newItem = new Item(item, urgency, newId);
-
-            //add the new contact to the list:
-            itemsList.add(newItem);
-
-            //clear the EditText fields:
-            editText.setText("");
-            theSwitch.setChecked(false);
-            urgency = 0;
-
-            myAdapter.notifyDataSetChanged();
-
-        });
-
-    }
-
-    private void loadDataFromDatabase() {
-        //get a database connection:
-        MyOpener dbOpener = new MyOpener(MainActivity.this);
-
-        db = dbOpener.getWritableDatabase();
-
-        // We want to get all of the columns. Look at MyOpener.java for the definitions:
-        String[] columns = {MyOpener.COL_ID, MyOpener.COL_ITEM, MyOpener.COL_URGENCY};
-        //query all the results from the database:
-        Cursor results = db.query(false, MyOpener.TABLE_NAME, columns, null, null, null, null, null, null);
-
-        //Now the results object has rows of results that match the query.
-        //find the column indices:
-        int itemColumnIndex = results.getColumnIndex(MyOpener.COL_ITEM);
-        int urgencyColIndex = results.getColumnIndex(MyOpener.COL_URGENCY);
-        int idColIndex = results.getColumnIndex(MyOpener.COL_ID);
-
-        //iterate over the results, return true if there is a next item:
-        while (results.moveToNext()) {
-            String item = results.getString(itemColumnIndex);
-            int urgency = results.getInt(urgencyColIndex);
-            long id = results.getInt(idColIndex);
-
-            itemsList.add(new Item(item, urgency, id));
-        }
-        printCursor(results);
-    }
-
-    protected void deleteItem(Item i) {
-        db.delete(MyOpener.TABLE_NAME, MyOpener.COL_ID + "= ?", new String[]{Long.toString(i.getId())});
-    }
-
-    private void printCursor(Cursor c) {
-        Log.d(TAG, "Database version " + db.getVersion());
-        Log.d(TAG, "Number of columns " + c.getColumnNames().length);
-        Log.d(TAG,"Names of columns " + c.getColumnNames()[0] + ", " + c.getColumnNames()[1] + ", " + c.getColumnNames()[2]);
-        Log.d(TAG,"Number of results " + c.getCount());
-
-        int itemColumnIndex = c.getColumnIndex(MyOpener.COL_ITEM);
-        int urgencyColIndex = c.getColumnIndex(MyOpener.COL_URGENCY);
-        int idColIndex = c.getColumnIndex(MyOpener.COL_ID);
-
-        while (c.moveToNext()) {
-            String item = c.getString(itemColumnIndex);
-            int urgency = c.getInt(urgencyColIndex);
-            long id = c.getInt(idColIndex);
-
-            Log.d(TAG,"Result row " + id + " " + item + " " + urgency);
         }
 
-    }
+        //Type 2
+        public void onProgressUpdate(Integer... args) {
 
-    private class MyListAdapter extends BaseAdapter {
-        public int getCount() {
-            return itemsList.size();
         }
 
-        public Object getItem(int position) {
-            return itemsList.get(position);
-        }
+        //Type3
+        public void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            imageView.setImageBitmap(bitmap);
 
-        public long getItemId(int position) {
-            return (long) position;
-        }
-
-        public View getView(int position, View old, ViewGroup parent) {
-            View newView = old;
-            LayoutInflater inflater = getLayoutInflater();
-
-            if (newView == null) {
-                newView = inflater.inflate(R.layout.lvlayout, parent, false);
-            }
-
-            TextView textView = newView.findViewById(R.id.textView);
-            Item item = (Item) getItem(position);
-            textView.setText(item.getText());
-
-            if (item.urgent == 1) {
-                textView.setBackgroundColor(Color.BLACK);
-                textView.setTextColor(Color.WHITE);
-            } else {
-                textView.setBackgroundColor(Color.WHITE);
-                textView.setTextColor(Color.BLACK);
-            }
-            return newView;
         }
     }
 }
-
