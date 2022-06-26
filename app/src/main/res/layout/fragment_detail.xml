@@ -19,7 +19,6 @@
         android:id="@+id/nameView2"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:hint="@string/text_view4"
         android:textSize="20dp" />
 
     <TextView
@@ -34,7 +33,6 @@
         android:id="@+id/heightView2"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:hint="@string/text_view4"
         android:textSize="20dp" />
 
 
@@ -50,7 +48,6 @@
         android:id="@+id/massView2"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:hint="@string/text_view4"
         android:textSize="20dp" />
 
 </LinearLayout>

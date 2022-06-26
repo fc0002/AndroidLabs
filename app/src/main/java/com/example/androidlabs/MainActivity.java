@@ -1,7 +1,6 @@
 package com.example.androidlabs;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -15,6 +14,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -25,12 +25,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
 
-    ArrayList<Map<String, String>> source = new ArrayList<>();
+    JSONArray source = null;
 
-    public void setList(ArrayList<Map<String, String>> list) {
+    public void setList(JSONArray list) {
         this.source = list;
     }
 
@@ -50,17 +51,32 @@ public class MainActivity extends AppCompatActivity {
         ListView theList = (ListView) findViewById(R.id.theList);
         boolean isTablet = findViewById(R.id.fragmentLocation) != null; //check if the FrameLayout is loaded
 
-
+        theList.setAdapter(myAdapter = new ListViewAdapter());
 
         StarWars req = new StarWars();
-        req.execute("https://swapi.dev/api/people/?format=json");
-
-        theList.setAdapter(myAdapter = new ListViewAdapter());
+        AsyncTask<String, Integer, JSONArray> execute = req.execute("https://swapi.dev/api/people/?format=json");
+        try {
+            source = execute.get();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         theList.setOnItemClickListener((list, item, position, id) -> {
 
             FrameLayout frameLayout = (FrameLayout) findViewById(R.id.fragmentLocation);
-            Bundle dataToPass = getIntent().getExtras(); //get the data that was passed from FragmentExample
+            Bundle dataToPass = new Bundle(); //= getIntent().getExtras(); //get the data that was passed from FragmentExample
+
+
+            try {
+                dataToPass.putString(NAME, source.getJSONObject(position).getString("name"));
+                dataToPass.putString(HEIGHT, source.getJSONObject(position).getString("height"));
+                dataToPass.putString(MASS, source.getJSONObject(position).getString("mass"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
 
             if (isTablet) {
                 DetailFragment dFragment = new DetailFragment(); //add a DetailFragment
@@ -81,9 +97,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private class StarWars extends AsyncTask<String, Integer, ArrayList<Map<String, String>>> {
+    private class StarWars extends AsyncTask<String, Integer, JSONArray> {
 
-        ArrayList<Map<String, String>> source = new ArrayList<>();
         private MainActivity activity;
 
         public StarWars(MainActivity activity) {
@@ -94,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        public ArrayList<Map<String, String>> doInBackground(String... args) {
+        public JSONArray doInBackground(String... args) {
 
             try {
 
@@ -121,27 +136,22 @@ public class MainActivity extends AppCompatActivity {
 
                 // convert string to JSON:
                 JSONArray characters = new JSONObject(result).getJSONArray("results");
-                int length = characters.length();
 
-                for (int i = 0; i < length; i++) {
-                    source.add((Map<String, String>) characters.getJSONObject(i));
-                }
                 
                 myAdapter.notifyDataSetChanged();
-
+                return characters;
             } catch (Exception e) {
-
+                e.printStackTrace();
+                return null;
             }
-
-            return source;
         }
 
-        public void onProgressUpdate(ArrayList<Map<String, String>>... args) {
+        public void onProgressUpdate(JSONArray... args) {
             //imageView.setImageBitmap(bitmap);
             activity.setList(source);
         }
 
-        public void onPostExecute(ArrayList<Map<String, String>> result) {
+        public void onPostExecute(JSONArray result) {
             //activity.setList(source);
         }
     }
@@ -149,11 +159,20 @@ public class MainActivity extends AppCompatActivity {
     private class ListViewAdapter extends BaseAdapter {
 
         public int getCount() {
-            return source.size();
+            if (source == null) {
+                return 0;
+            }
+            else
+                return source.length();
         }
 
         public Object getItem(int position) {
-            return source.get(position);
+            try {
+                return source.getJSONObject(position);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return null;
+            }
         }
 
         public long getItemId(int position) {
@@ -165,19 +184,18 @@ public class MainActivity extends AppCompatActivity {
             LayoutInflater inflater = getLayoutInflater();
 
             if (newView == null) {
-                newView = inflater.inflate(R.layout.fragment_detail, parent, false);
+                newView = inflater.inflate(R.layout.fragment_layout, parent, false);
             }
 
             ListView listView = newView.findViewById(R.id.theList);
 
-            TextView nameView = newView.findViewById(R.id.nameView1);
-            TextView heightView = newView.findViewById(R.id.heightView1);
-            TextView massView = newView.findViewById(R.id.massView1);
+            TextView nameView = newView.findViewById(R.id.nameView);
+            try {
+                nameView.setText(source.getJSONObject(position).getString("name"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
 
-            Map<String, String> character = source.get(position);
-            nameView.setText(character.get("name"));
-            heightView.setText(character.get("height"));
-            massView.setText(character.get("mass"));
 
             return newView;
         }
