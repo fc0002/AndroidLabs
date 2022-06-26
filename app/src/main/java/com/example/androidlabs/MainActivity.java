@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
     private class StarWars extends AsyncTask<String, Integer, ArrayList<Map<String, String>>> {
 
-        ArrayList<Map<String, String>> source;
+        ArrayList<Map<String, String>> source = new ArrayList<>();
         private MainActivity activity;
 
         public StarWars(MainActivity activity) {
@@ -126,10 +126,6 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < length; i++) {
                     source.add((Map<String, String>) characters.getJSONObject(i));
                 }
-
-                for (Map character : source) {
-                    names.add((String) character.get("Name"));
-                }
                 
                 myAdapter.notifyDataSetChanged();
 
@@ -142,10 +138,11 @@ public class MainActivity extends AppCompatActivity {
 
         public void onProgressUpdate(ArrayList<Map<String, String>>... args) {
             //imageView.setImageBitmap(bitmap);
+            activity.setList(source);
         }
 
         public void onPostExecute(ArrayList<Map<String, String>> result) {
-            //activity.setList(result);
+            //activity.setList(source);
         }
     }
 
