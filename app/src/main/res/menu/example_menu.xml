@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+        <item android:id="@+id/item1"
+            android:title="Name"
+            android:icon="@drawable/name"
+            app:showAsAction="always"/>
+
+        <item android:id="@+id/item2"
+         android:title="Language"
+         android:icon="@drawable/language"
+         app:showAsAction="always"/>
+
+        <item android:id="@+id/item3"
+            android:title="item3"
+            android:icon="@drawable/language"
+            app:showAsAction="never"/>
+</menu>
