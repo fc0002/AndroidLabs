@@ -5,26 +5,40 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context="MainActivity">
 
-    <Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/my_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        app:menu="@menu/example_drawer"
+        app:title="Lab 8" />
 
     <androidx.drawerlayout.widget.DrawerLayout
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:openDrawer="start">
+        <!--             android:layout_width="match_parent" -->
+        <!--             android:layout_height="match_parent" -->
+        <!--             android:orientation="vertical"> -->
+        <!--         <com.google.android.material.navigation.NavigationView -->
+        <!--             android:id="@+id/nav_joke" -->
+        <!--             android:layout_width="wrap_content" -->
+        <!--             android:layout_height="match_parent" -->
+        <!--             android:layout_gravity="start" -->
+        <!--             android:fitsSystemWindows="true" -->
+        <!--             app:headerLayout="@layout/activity_dad_joke" -->
+        <!--             app:menu="@menu/example_menu" /> -->
 
         <com.google.android.material.navigation.NavigationView
+            android:id="@+id/nav_view"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
+            android:clickable="true"
             android:fitsSystemWindows="true"
-            app:menu="@menu/example_menu"
-            android:id="@+id/nav_view"/>
+            app:menu="@menu/example_drawer" />
     </androidx.drawerlayout.widget.DrawerLayout>
 
 </LinearLayout>
